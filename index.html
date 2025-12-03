@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Candidate Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+
+  <body>
+    <div class="app-container">
+      <!-- SIDEBAR -->
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <div class="logo">
+            <!-- <div class="logo-icon">CB</div> -->
+            <span class="logo-text">Candidate Dashboard</span>
+          </div>
+        </div>
+        
+        <nav class="sidebar-nav">
+          <div class="nav-section">
+            <span class="nav-label">Main Menu</span>
+            <a href="#" class="nav-link active">
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+              </svg>
+              <span>Dashboard</span>
+            </a>
+            <a href="#" class="nav-link" id="navTitleMap">
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <path d="M14 2v6h6"/><line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/>
+              </svg>
+              <span>Title Map</span>
+            </a>
+          </div>
+        </nav>
+        
+        <div class="sidebar-footer">
+          <div id="connectionStatus" class="status-badge">
+            <span class="status-dot"></span>
+            <span class="status-text">Connecting...</span>
+          </div>
+        </div>
+      </aside>
+
+      <!-- MAIN CONTENT -->
+      <main class="main-content">
+        <!-- TOP BAR -->
+        <header class="top-bar">
+          <div class="top-bar-left">
+            <h1 class="page-title">Candidates</h1>
+            <span class="page-breadcrumb">Dashboard / Candidates</span>
+          </div>
+          <div class="top-bar-right">
+            <div class="search-box">
+              <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+              </svg>
+              <input id="searchInput" type="text" placeholder="Search candidates..." />
+            </div>
+            <button id="openFormBtn" class="btn btn-primary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Add Candidate
+            </button>
+          </div>
+        </header>
+
+        <!-- CONTENT AREA -->
+        <div class="content-area">
+          <!-- STATS ROW -->
+          <div class="stats-row">
+            <div class="stat-card">
+              <div class="stat-card-icon blue">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+              </div>
+              <div class="stat-card-content">
+                <span class="stat-card-value" id="totalCandidates">0</span>
+                <span class="stat-card-label">Total Candidates</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-icon green">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                  <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+              </div>
+              <div class="stat-card-content">
+                <span class="stat-card-value" id="totalTitles">0</span>
+                <span class="stat-card-label">Job Titles</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-icon purple">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/>
+                  <line x1="8" y1="2" x2="8" y2="6"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+              </div>
+              <div class="stat-card-content">
+                <span class="stat-card-value" id="todayDate">--</span>
+                <span class="stat-card-label">Today's Date</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- CANDIDATE FORM MODAL -->
+          <div id="candidateForm" class="form-card hidden">
+            <form id="candidateFormInner" class="form-modal">
+              <div class="card-header">
+                <div class="card-header-left">
+                  <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                  </svg>
+                  <h2 class="card-title">Candidate Information</h2>
+                </div>
+                <button type="button" id="closeFormBtn" class="btn-close">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
+              </div>
+              <div class="card-body">
+                <!-- Personal Details -->
+                <div class="form-section">
+                  <h3 class="form-section-title">Personal Details</h3>
+                  <div class="form-row">
+                    <div class="form-field">
+                      <label>Full Name <span class="required">*</span></label>
+                      <input id="candidateName" type="text" placeholder="Enter full name" required />
+                    </div>
+                    <div class="form-field">
+                      <label>Phone Number</label>
+                      <input id="contactNo" type="tel" placeholder="+1 (555) 123-4567" />
+                    </div>
+                    <div class="form-field">
+                      <label>Email Address</label>
+                      <input id="email" type="email" placeholder="john@example.com" />
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-field">
+                      <label>Date of Birth</label>
+                      <input id="dob" type="text" placeholder="MM/DD" />
+                    </div>
+                    <div class="form-field">
+                      <label>Location</label>
+                      <input id="currentLocation" type="text" placeholder="City, State" />
+                    </div>
+                    <div class="form-field">
+                      <label>Skype ID</label>
+                      <input id="skypeId" type="text" placeholder="skype.username" />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Professional Info -->
+                <div class="form-section">
+                  <h3 class="form-section-title">Professional Information</h3>
+                  <div class="form-row">
+                    <div class="form-field full">
+                      <label>Skills</label>
+                      <input id="skills" type="text" placeholder="Java, Python, React, AWS..." />
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-field">
+                      <label>Job Title</label>
+                      <input id="title" type="text" placeholder="Senior Developer" />
+                    </div>
+                    <div class="form-field">
+                      <label>Total Experience</label>
+                      <input id="totalExp" type="text" placeholder="8 years" />
+                    </div>
+                    <div class="form-field">
+                      <label>US Experience</label>
+                      <input id="expUS" type="text" placeholder="5 years" />
+                    </div>
+                    <div class="form-field">
+                      <label>Rate</label>
+                      <input id="rate" type="text" placeholder="$80/hr" />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Visa & Availability -->
+                <div class="form-section">
+                  <h3 class="form-section-title">Visa & Availability</h3>
+                  <div class="form-row">
+                    <div class="form-field">
+                      <label>Visa Status</label>
+                      <input id="visaStatus" type="text" placeholder="H1B, GC, Citizen..." />
+                    </div>
+                    <div class="form-field">
+                      <label>Relocation</label>
+                      <input id="relocation" type="text" placeholder="Yes / No" />
+                    </div>
+                    <div class="form-field">
+                      <label>Work Mode</label>
+                      <input id="onsiteRemote" type="text" placeholder="Remote / Onsite" />
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-field">
+                      <label>Project Availability</label>
+                      <input id="availProject" type="text" placeholder="Immediate" />
+                    </div>
+                    <div class="form-field">
+                      <label>Interview Availability</label>
+                      <input id="availInterview" type="text" placeholder="Anytime" />
+                    </div>
+                    <div class="form-field">
+                      <label>Best Time to Reach</label>
+                      <input id="bestTime" type="text" placeholder="9 AM - 5 PM EST" />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Education -->
+                <div class="form-section">
+                  <h3 class="form-section-title">Education</h3>
+                  <div class="form-row">
+                    <div class="form-field">
+                      <label>Bachelor's Degree</label>
+                      <input id="bachelor" type="text" placeholder="University / Year" />
+                    </div>
+                    <div class="form-field">
+                      <label>Master's Degree</label>
+                      <input id="masters" type="text" placeholder="University / Year" />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Documents -->
+                <div class="form-section">
+                  <h3 class="form-section-title">Documents & IDs</h3>
+                  <div class="form-row">
+                    <div class="form-field">
+                      <label>SSN (Last 4)</label>
+                      <input id="ssn" type="text" placeholder="XXXX" maxlength="4" />
+                    </div>
+                    <div class="form-field">
+                      <label>Passport No</label>
+                      <input id="ppNo" type="text" placeholder="AB1234567" />
+                    </div>
+                    <div class="form-field">
+                      <label>LinkedIn</label>
+                      <input id="linkedin" type="url" placeholder="linkedin.com/in/..." />
+                    </div>
+                    <div class="form-field">
+                      <label>Match Keyword</label>
+                      <input id="match" type="text" placeholder="Java, Python, AWS..." />
+                    </div>
+                    <div class="form-field">
+                      <label>Status</label>
+                      <div class="status-toggle">
+                        <label class="toggle-switch">
+                          <input type="checkbox" id="candidateActive" checked />
+                          <span class="toggle-slider"></span>
+                        </label>
+                        <span class="status-label" id="statusLabel">Active</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- File Uploads -->
+                  <div class="form-row">
+                    <div class="form-field">
+                      <label>Resume <span class="required">* Required</span></label>
+                      <div class="file-upload" id="resumeDropArea">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                          <polyline points="14 2 14 8 20 8"/>
+                          <line x1="12" y1="18" x2="12" y2="12"/>
+                          <line x1="9" y1="15" x2="12" y2="12"/>
+                          <line x1="15" y1="15" x2="12" y2="12"/>
+                        </svg>
+                        <span class="file-upload-text">Drop files or click to upload</span>
+                        <span class="file-upload-hint">PDF, DOC, DOCX (Multiple allowed)</span>
+                        <input type="file" id="resumeFile" accept=".pdf,.doc,.docx" multiple />
+                      </div>
+                      <div id="resumePreview" class="file-preview"></div>
+                      <input type="hidden" id="resume" />
+                    </div>
+                    <div class="form-field">
+                      <label>DL / License <span class="optional">(Optional)</span></label>
+                      <div class="file-upload" id="dlDropArea">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                          <circle cx="8.5" cy="8.5" r="1.5"/>
+                          <polyline points="21 15 16 10 5 21"/>
+                        </svg>
+                        <span class="file-upload-text">Drop file or click to upload</span>
+                        <span class="file-upload-hint">PDF, JPG, PNG</span>
+                        <input type="file" id="dlFile" accept=".pdf,.jpg,.jpeg,.png" />
+                      </div>
+                      <div id="dlPreview" class="file-preview"></div>
+                      <input type="hidden" id="dl" />
+                    </div>
+                    <div class="form-field">
+                      <label>Visa Copy <span class="optional">(Optional)</span></label>
+                      <div class="file-upload" id="visaDropArea">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                          <circle cx="8.5" cy="8.5" r="1.5"/>
+                          <polyline points="21 15 16 10 5 21"/>
+                        </svg>
+                        <span class="file-upload-text">Drop file or click to upload</span>
+                        <span class="file-upload-hint">PDF, JPG, PNG</span>
+                        <input type="file" id="visaFile" accept=".pdf,.jpg,.jpeg,.png" />
+                      </div>
+                      <div id="visaPreview" class="file-preview"></div>
+                      <input type="hidden" id="visaCopy" />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Recruiter Info -->
+                <div class="form-section">
+                  <h3 class="form-section-title">Recruiter Information</h3>
+                  <div class="form-row">
+                    <div class="form-field">
+                      <label>Recruiter Name</label>
+                      <input id="recruiterName" type="text" placeholder="Jane Smith" />
+                    </div>
+                    <div class="form-field">
+                      <label>Recruiter Email</label>
+                      <input id="recruiterEmail" type="email" placeholder="jane@company.com" />
+                    </div>
+                    <div class="form-field">
+                      <label>Recruiter Phone</label>
+                      <input id="recruiterPhone" type="tel" placeholder="+1 (555) 987-6543" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card-footer">
+                <button type="button" id="cancelEditBtn" class="btn btn-ghost hidden">Cancel</button>
+                <button type="submit" id="submitBtn" class="btn btn-primary">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                    <polyline points="17 21 17 13 7 13 7 21"/>
+                    <polyline points="7 3 7 8 15 8"/>
+                  </svg>
+                  Save Candidate
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- DATA TABLE -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-header-left">
+                <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                <h2 class="card-title">All Candidates</h2>
+              </div>
+              <span class="badge" id="tableCount">0 records</span>
+            </div>
+            <div class="table-container">
+              <table id="dataTable">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Status</th>
+                    <th>Name</th>
+                    <th>Contact</th>
+                    <th>Email</th>
+                    <th>Skills</th>
+                    <th>Visa</th>
+                    <th>Location</th>
+                    <th>Title</th>
+                    <th>Experience</th>
+                    <th>Rate</th>
+                    <th>Recruiter</th>
+                    <th>Resume</th>
+                    <th>DL</th>
+                    <th>Visa</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- DELETE MODAL -->
+    <div id="deleteModal" class="modal hidden">
+      <div class="modal-backdrop"></div>
+      <div class="modal-container modal-sm">
+        <div class="modal-icon danger">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            <line x1="10" y1="11" x2="10" y2="17"/>
+            <line x1="14" y1="11" x2="14" y2="17"/>
+          </svg>
+        </div>
+        <h3 class="modal-title">Delete Candidate?</h3>
+        <p id="deleteText" class="modal-desc">This action cannot be undone.</p>
+        <div class="modal-buttons">
+          <button id="cancelDeleteBtn" class="btn btn-ghost">Cancel</button>
+          <button id="confirmDeleteBtn" class="btn btn-danger">Delete</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TITLE MAP POPUP -->
+    <div id="titleMapPopup" class="modal hidden">
+      <div class="modal-backdrop"></div>
+      <div class="modal-container modal-lg">
+        <div class="modal-header">
+          <div class="modal-header-left">
+            <svg class="modal-header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <path d="M14 2v6h6"/>
+            </svg>
+            <h2>Title Map</h2>
+          </div>
+          <button id="closeTitleMap" class="btn-close">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="modal-toolbar">
+          <div class="search-box sm">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+            <input id="searchInputTM" type="text" placeholder="Search titles..." />
+          </div>
+          <button id="openAddBtnTM" class="btn btn-primary btn-sm">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Add Title
+          </button>
+        </div>
+
+        <div id="list" class="title-list"></div>
+
+        <!-- Nested Modals -->
+        <div id="modalBack" class="modal hidden"></div>
+        <div id="editBack" class="modal hidden">
+          <div class="modal-backdrop"></div>
+          <div class="modal-container modal-sm">
+            <h3 class="modal-title">Edit Title</h3>
+            <div id="editFields"></div>
+            <div class="modal-buttons">
+              <button id="editCancel" class="btn btn-ghost">Cancel</button>
+              <button id="editSave" class="btn btn-primary">Save</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hidden elements for compatibility -->
+    <div style="display:none">
+      <select id="modeSelect"><option value="title">Add Title</option></select>
+      <input id="newTitleInput" />
+      <input id="newItemInput" />
+      <select id="selectTitleForItem"></select>
+      <div id="suggestionContainer"></div>
+      <button id="submitModalBtn"></button>
+      <button id="cancelBtnTM"></button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="script.js"></script>
+  </body>
+</html>
