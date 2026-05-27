@@ -30,7 +30,8 @@ const allowedChatIds = new Set(
     .filter(Boolean),
 );
 
-const bot = new TelegramBot(telegramToken, { polling: true });
+const isVercelRuntime = Boolean(process.env.VERCEL);
+const bot = new TelegramBot(telegramToken, { polling: !isVercelRuntime });
 const supabase = createClient(process.env.SUPABASE_URL, supabaseKey, {
   auth: { persistSession: false, autoRefreshToken: false },
 });
@@ -450,8 +451,16 @@ bot.onText(/^\/search\s+(.+)$/, async (msg, match) => {
   }
 });
 
-bot.on("polling_error", (error) => {
-  console.error("Telegram polling error:", error.message);
-});
+if (!isVercelRuntime) {
+  bot.on("polling_error", (error) => {
+    console.error("Telegram polling error:", error.message);
+  });
+}
 
-console.log("Telegram candidate bot is running.");
+console.log(
+  isVercelRuntime
+    ? "Telegram candidate bot webhook handler is ready."
+    : "Telegram candidate bot is running.",
+);
+
+module.exports = { bot };

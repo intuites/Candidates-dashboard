@@ -28,15 +28,25 @@ This project now includes a Telegram bot for checking and updating candidate sta
 npm install
 ```
 
-5. Start the bot:
+5. Start the bot locally:
 
 ```bash
 npm run bot
 ```
 
+## Vercel Webhook
+
+The Vercel deployment uses `/api/telegram` as the Telegram webhook endpoint:
+
+```text
+https://candidate-dashboards.vercel.app/api/telegram
+```
+
+After deploying, set the Telegram webhook to that URL. The same environment variables listed above must be configured in the Vercel project for Production.
+
 ## Notes
 
-- The bot uses Telegram long polling, so you can run it locally or on any small Node host.
+- The local bot uses Telegram long polling. The Vercel deployment uses a webhook because Vercel does not run long-lived polling workers.
 - If `TELEGRAM_ALLOWED_CHAT_IDS` is empty, any chat that can reach the bot can use it.
 - Bot status updates write to Supabase first, then try to sync the same record to Google Sheets.
 - Timed holds require these Supabase columns on `Email_Atm`:
