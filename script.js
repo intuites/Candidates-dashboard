@@ -38,6 +38,11 @@ const cancelBtn = document.getElementById("cancelEditBtn");
 const searchEl = document.getElementById("searchInput");
 const openFormBtn = document.getElementById("openFormBtn");
 const closeFormBtn = document.getElementById("closeFormBtn");
+const holdModal = document.getElementById("holdModal");
+const holdDurationSelect = document.getElementById("holdDurationSelect");
+const holdCustomDateWrap = document.getElementById("holdCustomDateWrap");
+const holdCustomDate = document.getElementById("holdCustomDate");
+const holdApplyBtn = document.getElementById("holdApplyBtn");
 
 // File upload elements
 const resumeFileInput = document.getElementById("resumeFile");
@@ -80,7 +85,7 @@ let currentEdit = null;
 let candidatesMap = new Map();
 
 // File upload state - support multiple resumes with individual titles
-let pendingResumeFiles = []; // Array of {file, title} objects for multiple resume files
+let pendingResumeFiles = []; // Array of {file, title, skills} objects for multiple resume files
 let pendingDlFile = null;
 let pendingVisaFile = null;
 
@@ -129,6 +134,260 @@ function updateStats() {
   }
   if (tableCountEl) tableCountEl.textContent = `${allRows.length} records`;
 }
+
+function normalizeActive(value) {
+  return value === "Yes" || value === true || value === "true";
+}
+
+function formatHoldUntil(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function formatHoldCountdown(value) {
+  if (!value) return "";
+  const target = new Date(value).getTime();
+  if (Number.isNaN(target)) return "";
+
+  const diff = target - Date.now();
+  if (diff <= 0) return "activating now";
+
+  const totalSeconds = Math.floor(diff / 1000);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (days > 0) return `${days}d ${hours}h ${minutes}m`;
+  if (hours > 0) return `${hours}h ${minutes}m ${seconds}s`;
+  if (minutes > 0) return `${minutes}m ${seconds}s`;
+  return `${seconds}s`;
+}
+
+function parseEncodedHold(value) {
+  const text = String(value || "");
+  if (!text.startsWith("Hold|")) return null;
+  const [, holdType = "", holdUntil = ""] = text.split("|");
+  return { holdType, holdUntil };
+}
+
+function encodeHoldActiveValue(hold) {
+  if (hold.active === "Yes") return "Yes";
+  if (!hold.holdUntil) return "No";
+  return `Hold|${hold.holdType || "Custom"}|${hold.holdUntil}`;
+}
+
+function getRowHoldType(row) {
+  return row["Hold Type"] || parseEncodedHold(row.Active)?.holdType || "";
+}
+
+function getRowHoldUntil(row) {
+  return row["Hold Until"] || parseEncodedHold(row.Active)?.holdUntil || "";
+}
+
+function isMissingHoldColumnError(error) {
+  const message = String(error?.message || "");
+  return (
+    message.includes("Hold Type") ||
+    message.includes("Hold Until") ||
+    message.includes("schema cache")
+  );
+}
+
+function addDays(date, days) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+
+function addMonths(date, months) {
+  const next = new Date(date);
+  next.setMonth(next.getMonth() + months);
+  return next;
+}
+
+function buildHoldChoice(choice, customDate) {
+  const now = new Date();
+  if (choice === "week") {
+    return {
+      active: "No",
+      holdType: "Week",
+      holdUntil: addDays(now, 7).toISOString(),
+    };
+  }
+
+  if (choice === "month") {
+    return {
+      active: "No",
+      holdType: "Month",
+      holdUntil: addMonths(now, 1).toISOString(),
+    };
+  }
+
+  if (choice === "custom") {
+    const resumeAt = new Date(`${customDate}T00:00:00`);
+    if (!customDate || Number.isNaN(resumeAt.getTime())) {
+      alert("Please select a valid resume date.");
+      return null;
+    }
+    return {
+      active: "No",
+      holdType: "Custom",
+      holdUntil: resumeAt.toISOString(),
+    };
+  }
+
+  return {
+    active: "No",
+    holdType: "Permanent",
+    holdUntil: "",
+  };
+}
+
+function getHoldChoice() {
+  if (!holdModal || !holdDurationSelect || !holdApplyBtn) {
+    return Promise.resolve(buildHoldChoice("permanent"));
+  }
+
+  holdDurationSelect.value = "week";
+  if (holdCustomDate) holdCustomDate.value = "";
+  if (holdCustomDateWrap) holdCustomDateWrap.classList.add("hidden");
+  holdModal.classList.remove("hidden");
+
+  return new Promise((resolve) => {
+    const cleanup = () => {
+      holdModal.classList.add("hidden");
+      holdApplyBtn.removeEventListener("click", onApply);
+      holdDurationSelect.removeEventListener("change", onDurationChange);
+      holdModal
+        .querySelectorAll("[data-hold-cancel]")
+        .forEach((el) => el.removeEventListener("click", onCancel));
+    };
+
+    const onDurationChange = () => {
+      if (!holdCustomDateWrap) return;
+      holdCustomDateWrap.classList.toggle(
+        "hidden",
+        holdDurationSelect.value !== "custom",
+      );
+    };
+
+    const onCancel = () => {
+      cleanup();
+      resolve(null);
+    };
+
+    const onApply = () => {
+      const hold = buildHoldChoice(
+        holdDurationSelect.value,
+        holdCustomDate?.value || "",
+      );
+      if (!hold) return;
+      cleanup();
+      resolve(hold);
+    };
+
+    holdDurationSelect.addEventListener("change", onDurationChange);
+    holdApplyBtn.addEventListener("click", onApply);
+    holdModal
+      .querySelectorAll("[data-hold-cancel]")
+      .forEach((el) => el.addEventListener("click", onCancel));
+  });
+}
+
+async function updateCandidateHold(id, hold) {
+  const payload = {
+    Active: hold.active,
+    "Hold Type": hold.holdType || "",
+    "Hold Until": hold.holdUntil || null,
+  };
+
+  let { data, error } = await db
+    .from("Email_Atm")
+    .update(payload)
+    .eq("Unique", id)
+    .select()
+    .single();
+
+  if (error && isMissingHoldColumnError(error)) {
+    const fallbackPayload = { Active: encodeHoldActiveValue(hold) };
+    const fallback = await db
+      .from("Email_Atm")
+      .update(fallbackPayload)
+      .eq("Unique", id)
+      .select()
+      .single();
+
+    data = fallback.data;
+    error = fallback.error;
+  }
+
+  if (error) throw error;
+  await syncToSheet("Email_Atm", "update", data);
+  return data;
+}
+
+async function releaseExpiredCandidateHolds(rows) {
+  const now = Date.now();
+  const expiredRows = rows.filter((row) => {
+    if (normalizeActive(row.Active)) return false;
+    const rowHoldUntil = getRowHoldUntil(row);
+    if (!rowHoldUntil) return false;
+    const holdUntil = new Date(rowHoldUntil).getTime();
+    return !Number.isNaN(holdUntil) && holdUntil <= now;
+  });
+
+  for (const row of expiredRows) {
+    try {
+      const updated = await updateCandidateHold(Number(row.Unique), {
+        active: "Yes",
+        holdType: "",
+        holdUntil: null,
+      });
+      Object.assign(row, updated);
+    } catch (error) {
+      console.warn(
+        `Failed to auto-activate candidate ${row.Unique}:`,
+        error.message,
+      );
+    }
+  }
+}
+
+let isAutoReleasingHold = false;
+
+function updateHoldCountdownBadges() {
+  const countdownEls = document.querySelectorAll("[data-hold-until]");
+  let hasExpiredHold = false;
+
+  countdownEls.forEach((el) => {
+    const holdUntil = el.dataset.holdUntil;
+    const countdown = formatHoldCountdown(holdUntil);
+    el.textContent = countdown ? ` (${countdown})` : "";
+
+    const target = new Date(holdUntil).getTime();
+    if (!Number.isNaN(target) && target <= Date.now()) {
+      hasExpiredHold = true;
+    }
+  });
+
+  if (hasExpiredHold && !isAutoReleasingHold) {
+    isAutoReleasingHold = true;
+    releaseExpiredCandidateHolds(allRows)
+      .then(() => renderTable(allRows))
+      .finally(() => {
+        isAutoReleasingHold = false;
+      });
+  }
+}
+
+setInterval(updateHoldCountdownBadges, 1000);
 
 /* ============================================
    FILE UPLOAD TO GOOGLE DRIVE
@@ -381,8 +640,8 @@ function handleFileSelect(file, dropArea, previewEl, type) {
       (f) => f.file.name === file.name && f.file.size === file.size,
     );
     if (!exists) {
-      // Store as object with file and title
-      pendingResumeFiles.push({ file: file, title: "" });
+      // Store as object with file, title, and optional per-profile skills.
+      pendingResumeFiles.push({ file: file, title: "", skills: "" });
     }
     // Update preview to show all resume files with title inputs
     updateResumePreview();
@@ -411,7 +670,7 @@ function handleFileSelect(file, dropArea, previewEl, type) {
   if (dropArea) dropArea.classList.add("has-file");
 }
 
-// Update resume preview to show all files with title inputs
+// Update resume preview to show all files with title and skills inputs
 function updateResumePreview() {
   if (!resumePreview) return;
 
@@ -426,7 +685,7 @@ function updateResumePreview() {
   let html = "";
 
   if (pendingResumeFiles.length > 1) {
-    html = `<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;font-weight:500;">${pendingResumeFiles.length} files - Enter title for each resume:</div>`;
+    html = `<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;font-weight:500;">${pendingResumeFiles.length} files - Enter title and skills for each resume:</div>`;
   }
 
   html += pendingResumeFiles
@@ -437,13 +696,19 @@ function updateResumePreview() {
         <span class="file-preview-name" style="font-weight:500;">${encodeHTML(item.file.name)}</span>
         <button type="button" class="file-remove-btn" onclick="removeResumeFile(${index})">✕</button>
       </div>
-      <input type="text" 
-        class="resume-title-input" 
+      <input type="text"
+        class="resume-title-input"
         data-resume-index="${index}"
-        placeholder="Enter title for this resume (e.g., Java Developer)" 
+        placeholder="Enter title for this resume (e.g., Java Developer)"
         value="${encodeHTML(item.title || "")}"
-        onchange="updateResumeTitle(${index}, this.value)"
-        style="width:100%;padding:6px 10px;border:1px solid var(--color-border);border-radius:4px;font-size:12px;background:var(--color-card);"
+        oninput="updateResumeTitle(${index}, this.value)"
+      />
+      <input type="text"
+        class="resume-title-input"
+        data-resume-skills-index="${index}"
+        placeholder="Skills for this profile (leave blank to use main skills)"
+        value="${encodeHTML(item.skills || "")}"
+        oninput="updateResumeSkills(${index}, this.value)"
       />
     </div>
   `,
@@ -458,6 +723,14 @@ window.updateResumeTitle = function (index, title) {
   if (pendingResumeFiles[index]) {
     pendingResumeFiles[index].title = title;
     console.log(`Resume ${index + 1} title set to: "${title}"`);
+  }
+};
+
+// Update skills for a specific resume/profile
+window.updateResumeSkills = function (index, skills) {
+  if (pendingResumeFiles[index]) {
+    pendingResumeFiles[index].skills = skills;
+    console.log(`Resume ${index + 1} skills set to: "${skills}"`);
   }
 };
 
@@ -610,6 +883,7 @@ async function loadData() {
 
     console.log("Data loaded:", data?.length, "records");
     allRows = data || [];
+    await releaseExpiredCandidateHolds(allRows);
     candidatesMap = new Map();
     allRows.forEach((r) => {
       candidatesMap.set(String(r.Unique ?? ""), r["Candidate Name"] ?? "");
@@ -665,11 +939,17 @@ function renderTable(rows) {
     const resumeLink = createFileLink(row.Resume, "Resume", "");
     const dlLink = createFileLink(row.DL, "DL", "");
     const visaLink = createFileLink(row["Visa Copy"], "Visa", "");
-    const isActive =
-      row.Active === "Yes" || row.Active === true || row.Active === "true";
+    const isActive = normalizeActive(row.Active);
+    const rowHoldUntil = getRowHoldUntil(row);
+    const holdLabel = !isActive && rowHoldUntil
+      ? `Inactive until ${formatHoldUntil(rowHoldUntil)}`
+      : "Inactive";
+    const timer = !isActive && rowHoldUntil
+      ? `<span class="hold-countdown" data-hold-until="${encodeHTML(rowHoldUntil)}"> (${encodeHTML(formatHoldCountdown(rowHoldUntil))})</span>`
+      : "";
     const statusBadge = isActive
       ? `<span class="status-badge active" data-id="${row.Unique}" title="Click to deactivate"><span class="status-dot"></span>Active</span>`
-      : `<span class="status-badge inactive" data-id="${row.Unique}" title="Click to activate"><span class="status-dot"></span>Inactive</span>`;
+      : `<span class="status-badge inactive" data-id="${row.Unique}" title="Click to activate now"><span class="status-dot"></span>${encodeHTML(holdLabel)}${timer}</span>`;
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
@@ -774,30 +1054,23 @@ document.addEventListener("click", async (e) => {
     if (!id) return;
 
     const isCurrentlyActive = statusBadge.classList.contains("active");
-    const newStatus = isCurrentlyActive ? "No" : "Yes";
+    const hold = isCurrentlyActive
+      ? await getHoldChoice()
+      : { active: "Yes", holdType: "", holdUntil: null };
+
+    if (!hold) return;
 
     try {
-      // Update in Supabase
-      const { data, error } = await db
-        .from("Email_Atm")
-        .update({ Active: newStatus })
-        .eq("Unique", id)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Sync to Google Sheet
-      await syncToSheet("Email_Atm", "update", data);
-      console.log(`Status updated to ${newStatus} for candidate ${id}`);
+      const data = await updateCandidateHold(id, hold);
+      console.log(`Status updated to ${hold.active} for candidate ${id}`);
 
       // Update local data and re-render
       const row = allRows.find((r) => r.Unique === id);
-      if (row) row.Active = newStatus;
+      if (row) Object.assign(row, data);
       renderTable(allRows);
 
       // If candidate becomes inactive, remove from all Title Maps
-      if (newStatus === "No") {
+      if (hold.active === "No") {
         console.log(
           `Candidate ${id} is now inactive, removing from Title Maps...`,
         );
@@ -936,8 +1209,7 @@ document.addEventListener("click", async (e) => {
     const activeCheckbox = document.getElementById("candidateActive");
     const statusLabel = document.getElementById("statusLabel");
     if (activeCheckbox) {
-      const isActive =
-        data.Active === "Yes" || data.Active === true || data.Active === "true";
+      const isActive = normalizeActive(data.Active);
       activeCheckbox.checked = isActive;
       if (statusLabel)
         statusLabel.textContent = isActive ? "Active" : "Inactive";
@@ -1195,6 +1467,9 @@ const handleFormSubmit = async (e) => {
         const file = item?.file || null;
         // Use individual resume title, or fall back to form's title
         const resumeTitle = item?.title?.trim() || candidateTitle;
+        const resumeSkills = item?.skills?.trim()
+          ? item.skills.trim()
+          : baseRecord.Skills;
         let resumeUrl = getVal("resume") || "";
 
         // Upload resume file if exists
@@ -1230,6 +1505,7 @@ const handleFormSubmit = async (e) => {
           Unique: nextId,
           Resume: resumeUrl,
           Title: resumeTitle, // Each record gets its own title
+          Skills: resumeSkills, // Each resume can carry its own skills
         };
 
         console.log("Inserting candidate with ID:", nextId);
@@ -1627,9 +1903,7 @@ function openMultiSelectForTitle(titleId) {
     .filter(Boolean);
 
   // Filter to show only active candidates
-  const activeCandidates = allRows.filter(
-    (r) => r.Active === "Yes" || r.Active === true || r.Active === "true",
-  );
+  const activeCandidates = allRows.filter((r) => normalizeActive(r.Active));
 
   modalBackTM.innerHTML = `
     <div class="modal-backdrop" onclick="document.getElementById('modalBack').classList.add('hidden')"></div>

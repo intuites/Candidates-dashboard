@@ -1,0 +1,19 @@
+{
+  "name": "candidates-dashboard-sync",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Candidate dashboard with Telegram bot controls for active and inactive candidates.",
+  "main": "telegram-bot/bot.js",
+  "scripts": {
+    "bot": "node telegram-bot/bot.js",
+    "bot:dev": "node --watch telegram-bot/bot.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.57.4",
+    "dotenv": "^17.2.3",
+    "node-telegram-bot-api": "^0.66.0"
+  }
+}

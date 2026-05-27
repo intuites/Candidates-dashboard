@@ -11,35 +11,35 @@
   --color-surface-hover: #f1f5f9;
   --color-border: #e2e8f0;
   --color-border-light: #f1f5f9;
-  
+
   --color-text: #1e293b;
   --color-text-secondary: #64748b;
   --color-text-muted: #94a3b8;
-  
+
   --color-primary: #3b82f6;
   --color-primary-hover: #2563eb;
   --color-primary-light: #eff6ff;
-  
+
   --color-success: #10b981;
   --color-success-light: #ecfdf5;
-  
+
   --color-warning: #f59e0b;
   --color-warning-light: #fffbeb;
-  
+
   --color-danger: #ef4444;
   --color-danger-hover: #dc2626;
   --color-danger-light: #fef2f2;
-  
+
   --color-purple: #8b5cf6;
   --color-purple-light: #f5f3ff;
-  
+
   /* Sidebar */
   --sidebar-bg: #1e293b;
   --sidebar-text: #94a3b8;
   --sidebar-text-active: #ffffff;
   --sidebar-hover: #334155;
   --sidebar-active: #3b82f6;
-  
+
   /* Sizing */
   --sidebar-width: 260px;
   --header-height: 70px;
@@ -47,12 +47,12 @@
   --radius-md: 8px;
   --radius-lg: 12px;
   --radius-xl: 16px;
-  
+
   /* Shadows */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  
+
   /* Transitions */
   --transition: 150ms ease;
 }
@@ -1024,7 +1024,7 @@ td a:hover {
   position: relative;
   background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
   border-radius: var(--radius-xl);
-  box-shadow: 
+  box-shadow:
     0 25px 50px -12px rgba(0, 0, 0, 0.25),
     0 12px 24px -8px rgba(0, 0, 0, 0.15),
     0 0 0 1px rgba(255, 255, 255, 0.1),
@@ -1053,7 +1053,7 @@ td a:hover {
   text-align: center;
   background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
   border-radius: 20px;
-  box-shadow: 
+  box-shadow:
     0 30px 60px -15px rgba(0, 0, 0, 0.3),
     0 15px 30px -10px rgba(0, 0, 0, 0.2),
     inset 0 2px 0 rgba(255, 255, 255, 0.9);
@@ -1063,7 +1063,7 @@ td a:hover {
   width: 100%;
   max-width: 850px;
   background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-  box-shadow: 
+  box-shadow:
     0 30px 60px -15px rgba(0, 0, 0, 0.25),
     0 15px 30px -10px rgba(0, 0, 0, 0.15),
     inset 0 2px 0 rgba(255, 255, 255, 0.9);
@@ -1353,32 +1353,32 @@ td a:hover {
   .sidebar {
     width: 70px;
   }
-  
+
   .logo-text,
   .nav-link span,
   .nav-label,
   .status-text {
     display: none;
   }
-  
+
   .sidebar-header {
     padding: 16px;
   }
-  
+
   .logo {
     justify-content: center;
   }
-  
+
   .nav-link {
     justify-content: center;
     padding: 14px;
   }
-  
+
   .status-badge {
     justify-content: center;
     padding: 12px;
   }
-  
+
   .content-area {
     padding: 16px;
   }
@@ -1388,7 +1388,7 @@ td a:hover {
   .sidebar {
     display: none;
   }
-  
+
   .top-bar {
     flex-direction: column;
     height: auto;
@@ -1396,37 +1396,37 @@ td a:hover {
     gap: 12px;
     align-items: stretch;
   }
-  
+
   .top-bar-right {
     flex-direction: column;
   }
-  
+
   .search-box {
     width: 100%;
   }
-  
+
   .stats-row {
     grid-template-columns: 1fr;
   }
-  
+
   .form-row {
     grid-template-columns: 1fr;
   }
-  
+
   .table-container {
     max-height: none;
   }
-  
+
   .form-card {
     padding: 10px;
   }
-  
+
   .form-card .form-modal {
     max-width: 100%;
     max-height: 95vh;
     border-radius: var(--radius-lg);
   }
-  
+
   .form-card .card-body {
     padding: 16px;
   }
@@ -1511,6 +1511,7 @@ td a:hover {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 .status-badge.active {
@@ -1545,4 +1546,48 @@ td a:hover {
 
 .status-badge.inactive .status-dot {
   background: #ef4444;
+}
+
+.hold-countdown {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.9;
+}
+
+.hold-modal {
+  width: min(420px, calc(100vw - 32px));
+  padding: 28px;
+  text-align: left;
+}
+
+.hold-modal-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 14px;
+  border-radius: 12px;
+  background: #eef2ff;
+  color: #4f46e5;
+}
+
+.hold-modal-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.hold-modal-subtitle {
+  margin: -6px 0 20px;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.hold-modal .form-field {
+  margin-bottom: 16px;
+}
+
+.hold-modal select.input,
+.hold-modal input.input {
+  width: 100%;
 }

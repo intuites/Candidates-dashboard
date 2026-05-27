@@ -1,7 +1,7 @@
 /**************************************************************
  *       GOOGLE APPS SCRIPT - WITH DRIVE FILE UPLOAD
  *       Handles: Email_Atm + Title_Map + File Uploads
- *       
+ *
  *       SETUP:
  *       1. Go to script.google.com
  *       2. Create new project
@@ -32,7 +32,7 @@ function doGet(e) {
   // Handle JSONP callback for CORS workaround
   const callback = e.parameter.callback;
   const response = JSON.stringify({ status: "ok", message: "Webhook is running!" });
-  
+
   if (callback) {
     return ContentService.createTextOutput(callback + "(" + response + ")")
       .setMimeType(ContentService.MimeType.JAVASCRIPT);
@@ -49,19 +49,19 @@ function doPost(e) {
     }
 
     const body = JSON.parse(raw);
-    
+
     // Handle file upload
     if (body.action === "upload" && body.file) {
       return handleFileUpload(body.file);
     }
-    
+
     const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-    
+
     // Handle Email_Atm (Candidates)
     if (body.table === "Email_Atm") {
       return handleEmailAtm(ss, body.action, body.record);
     }
-    
+
     // Handle Title_Map
     if (body.table === "Title_Map") {
       return handleTitleMap(ss, body.action, body.record);
@@ -90,7 +90,7 @@ function handleFileUpload(fileData) {
     // Decode base64 file content
     const decoded = Utilities.base64Decode(fileData.content);
     const blob = Utilities.newBlob(decoded, fileData.mimeType, fileData.name);
-    
+
     // Get or create upload folder
     let folder;
     try {
@@ -99,24 +99,24 @@ function handleFileUpload(fileData) {
       // If folder ID is invalid, use root folder
       folder = DriveApp.getRootFolder();
     }
-    
+
     // Create file in Drive
     const file = folder.createFile(blob);
-    
+
     // Make file publicly accessible (anyone with link can view)
     file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-    
+
     // Get the shareable link
     const fileId = file.getId();
     const viewUrl = "https://drive.google.com/file/d/" + fileId + "/view?usp=sharing";
-    
+
     return jsonResponse({
       success: true,
       url: viewUrl,
       fileId: fileId,
       fileName: file.getName()
     });
-    
+
   } catch (err) {
     return jsonResponse({ success: false, error: err.message });
   }
@@ -129,7 +129,7 @@ function handleFileUpload(fileData) {
 function handleEmailAtm(ss, action, record) {
   let sh = ss.getSheetByName("Email_Atm");
   if (!sh) sh = ss.getSheetByName("Candidates");
-  
+
   if (!sh) {
     sh = ss.insertSheet("Email_Atm");
     const headers = [
@@ -142,7 +142,8 @@ function handleEmailAtm(ss, action, record) {
       "Total years of Exp in US", "Availability for Project",
       "Availability for Interview", "Best Time to reach",
       "Resume", "DL", "Title", "Rate", "Recruiter name",
-      "Recruiter email", "Recruiter Phone", "Match"
+      "Recruiter email", "Recruiter Phone", "Match", "Visa Copy", "Active",
+      "Hold Type", "Hold Until"
     ];
     sh.appendRow(headers);
   }
@@ -150,7 +151,7 @@ function handleEmailAtm(ss, action, record) {
   const values = sh.getDataRange().getValues();
   const headers = values[0];
   const colUnique = headers.indexOf("Unique");
-  
+
   // Find row by Unique ID
   let row = -1;
   for (let i = 1; i < values.length; i++) {
@@ -206,7 +207,7 @@ function handleEmailAtm(ss, action, record) {
 
 function handleTitleMap(ss, action, record) {
   let sh = ss.getSheetByName("Title_Map");
-  
+
   if (!sh) {
     sh = ss.insertSheet("Title_Map");
     // Headers match your format: TitleID, IDs, Title
@@ -215,7 +216,7 @@ function handleTitleMap(ss, action, record) {
 
   const values = sh.getDataRange().getValues();
   const headers = values[0];
-  
+
   // Column indices matching your format
   const colID = 0;     // TitleID
   const colIDs = 1;    // IDs (comma-separated candidate IDs)
